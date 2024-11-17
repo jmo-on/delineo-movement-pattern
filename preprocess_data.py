@@ -32,7 +32,7 @@ def preprocess_csv(file_path):
             location_name = row['location_name']
 
             if not safegraph_place_id:
-                continue  # Skip rows without a safegraph_place_id
+                continue  
 
             # Parse JSON fields
             visits_by_day = parse_json_field(row['visits_by_day'])
