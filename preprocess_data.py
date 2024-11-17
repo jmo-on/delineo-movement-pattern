@@ -18,7 +18,7 @@ def preprocess_csv(file_path):
             safegraph_place_id = row['safegraph_place_id']
 
             if not safegraph_place_id:
-                continue  # Skip rows without a safegraph_place_id
+                continue  
 
             sum_popularity = sum(parse_json_field(row['popularity_by_hour']))
             probability_by_hour = [p/sum_popularity for p in parse_json_field(row['popularity_by_hour'])]
