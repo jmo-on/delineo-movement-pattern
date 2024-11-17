@@ -24,8 +24,8 @@ def entering_poi(person: Person, poi_dict):
 def main(file_path):
     # Process CSV Data
     print("Parsing the CSV file...")
-    poi_dict, location_dict = preprocess_csv(file_path)
-    print(f"Parsed {len(poi_dict)} POIs and {len(location_dict)} locations.")
+    poi_dict = preprocess_csv(file_path)
+    print(f"Parsed {len(poi_dict)} POIs.")
 
     # Create population
     hagerstown_pop = 43000
@@ -34,14 +34,14 @@ def main(file_path):
 
     # Main iteration
     month = 720
-    for person_id, person in people.items():
-        entering_poi(person)
     
-    for hour in range(1, month):
+    for hour in range(month):
         print(f"Simulating hour {hour + 1}/720...")
         for person_id, person in people.items():
             leaving_poi(person, poi_dict)
             entering_poi(person, poi_dict)
+
+    # Output the results
 
 
 if __name__ == "__main__":
