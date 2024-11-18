@@ -4,20 +4,23 @@ class POIs:
     def __init__(self, pois_dict):
         # pois = [poi_id, ...]
         self.pois = list(pois_dict.keys())
-        self.raw_visit_counts = {poi_id: poi_data['raw_visit_counts'] for poi_id, poi_data in pois_dict.items()}
-        self.raw_visitor_counts = {poi_id: poi_data['raw_visitor_counts'] for poi_id, poi_data in pois_dict.items()}
-        
+        # pois_id_to_index = {poi_id: index}
+        self.poi_id_to_index = {poi_id: index for index, poi_id in enumerate(self.pois)}
+        # raw_visit_counts = {poi_id: raw_visit_counts}
+        self.raw_visit_counts = {poi_id: pois_dict[poi_id]['raw_visit_counts'] for poi_id in pois_dict}
+        # raw_visitor_counts = {poi_id: raw_visitor_counts}
+        self.raw_visitor_counts = {poi_id: pois_dict[poi_id]['raw_visitor_counts'] for poi_id in pois_dict}
         # capacities = [{poi_id: capacity} for 30 days]
         self.capacities = [{poi_id: pois_dict[poi_id]['visits_by_day'][i] for poi_id in pois_dict} for i in range(30)]
         # probabilities = [{poi_id: probability} for 24 hours]
         self.probabilities = [{poi_id: pois_dict[poi_id]['probability_by_hour'][i] for poi_id in pois_dict} for i in range(24)]
         # {prev_poi_id: {after_poi_id: tendency}}
-        self.tendency_probabilities = {poi_id: pois_dict[poi_id]['related_same_month_brand_probabilities'] for poi_id in pois_dict}
+        self.tendency_probabilities = {poi_id: pois_dict[poi_id]['after_tendency'] for poi_id in pois_dict}
         # {poi_id: occupancy}
         self.occupancies = {poi_id: 0 for poi_id in pois_dict}
         # Dwell times and CDFs
-        self.dwell_times = {poi_id: poi_dict['dwell_times'] for poi_id, poi_dict in self.pois_dict.items()}
-        self.dwell_time_cdfs = {poi_id: poi_dict['dwell_time_cdf'] for poi_id, poi_dict in self.pois_dict.items()}
+        self.dwell_times = {poi_id: pois_dict[poi_id]['dwell_times'] for poi_id in pois_dict}
+        self.dwell_time_cdfs = {poi_id: pois_dict[poi_id]['dwell_time_cdf'] for poi_id in pois_dict}
 
     def get_capacities_by_day(self, current_time):
         return self.capacities[current_time.day]
@@ -37,13 +40,32 @@ class POIs:
     def generate_next_poi_distribution(self, current_time, population):
         C = np.array(list(self.get_capacities_by_time(current_time).values()))
         O = np.array(list(self.occupancies.values()))
+        return (C - O)
+    
+    def generate_next_poi_distribution_with_tendency(self, current_time, population):
+        C = np.array(list(self.get_capacities_by_time(current_time).values()))
+        O = np.array(list(self.occupancies.values()))
         A = np.array([list(self.get_after_tendencies(poi_id).values()) for poi_id in self.pois])
+        # modify if needed
         alpha = 0.1
         return ((A * alpha) + (C - O)[:, np.newaxis]) / population
+    
+    def get_next_poi(self, current_time, population):
+        distribution = self.generate_next_poi_distribution(current_time, population)
+        move_probability = sum(distribution) / population
+        # normalize distribution
+        distribution = distribution / np.sum(distribution) if np.sum(distribution) > 0 else np.zeros_like(distribution)
+        if np.random.random() < move_probability:
+            return np.random.choice(self.pois, p=distribution)
+        else:
+            return None
+    
+    def get_next_poi_with_tendency(self, current_time, population, current_poi_id):
+        distributions = self.generate_next_poi_distribution_with_tendency(current_time, population)
+        return self.pois[np.random.choice(self.pois, p=distributions[self.poi_id_to_index[current_poi_id]])]
     
     def leave(self, poi_id):
         self.occupancies[poi_id] -= 1
 
     def enter(self, poi_id):
         self.occupancies[poi_id] += 1
-    

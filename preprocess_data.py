@@ -67,7 +67,6 @@ def compute_dwell_time_cdf(bucketed_dwell_times):
 
 def preprocess_csv(file_path):
     pois_dict = {}
-    pois_names_to_ids = {}
     
     with open(file_path, mode='r', encoding='utf-8') as csvfile:
         reader = csv.DictReader(csvfile)
@@ -87,13 +86,8 @@ def preprocess_csv(file_path):
             dwell_times, dwell_time_cdf = compute_dwell_time_cdf(bucketed_dwell_times)
 
             related_same_month_brand = parse_json_field(row['related_same_month_brand'])
-            related_same_month_brand_probabilities = {}
-            if related_same_month_brand:
-                sum_tendency = sum(related_same_month_brand.values())
-                if sum_tendency > 0:
-                    related_same_month_brand_probabilities = {
-                        poi_name: tendency / sum_tendency for poi_name, tendency in related_same_month_brand.items()
-                    }
+            sum_tendency = sum(related_same_month_brand.values())
+            after_tendency = {poi_id : related_same_month_brand.get(pois_dict[poi_id]['location_name'], 0) / sum_tendency  if sum_tendency > 0 else 0 for poi_id in pois_dict.keys()}
 
             # Construct the inner dictionary for poi_dict
             pois_dict[safegraph_place_id] = {
@@ -105,7 +99,10 @@ def preprocess_csv(file_path):
                 'dwell_times': dwell_times,
                 'dwell_time_cdf': dwell_time_cdf,
                 'related_same_day_brand': parse_json_field(row['related_same_day_brand']),
-                'related_same_month_brand_probabilities': related_same_month_brand_probabilities
+                'after_tendency': after_tendency
             } 
 
     return pois_dict
+
+if __name__ == "__main__":
+    pois_dict = preprocess_csv('./input/hagerstown.csv')
