@@ -8,14 +8,6 @@ def parse_json_field(field):
         return json.loads(field)
     except json.JSONDecodeError:
         return {}
-    
-def create_pois_names_to_ids(file_path):
-    pois_names_to_ids = {}
-    with open(file_path, mode='r', encoding='utf-8') as csvfile:
-        reader = csv.DictReader(csvfile)
-        for row in reader:
-            pois_names_to_ids[row['location_name']] = row['safegraph_place_id']
-    return pois_names_to_ids
 
 def compute_dwell_time_cdf(bucketed_dwell_times):
     """
@@ -75,12 +67,8 @@ def compute_dwell_time_cdf(bucketed_dwell_times):
 
 def preprocess_csv(file_path):
     pois_dict = {}
-<<<<<<< HEAD
-    pois_names_to_ids = create_pois_names_to_ids(file_path)
-=======
     pois_names_to_ids = {}
     
->>>>>>> origin/leave_distribution
     with open(file_path, mode='r', encoding='utf-8') as csvfile:
         reader = csv.DictReader(csvfile)
         for row in reader:
@@ -98,17 +86,6 @@ def preprocess_csv(file_path):
             # Compute dwell time CDF with adjusted buckets
             dwell_times, dwell_time_cdf = compute_dwell_time_cdf(bucketed_dwell_times)
 
-<<<<<<< HEAD
-            # related_same_month_brand = {pois_names_to_ids[poi_name]: tendency for poi_name, tendency in parse_json_field(row['related_same_month_brand'])}
-
-            related_same_month_brand = {}
-            for poi_name, tendency in parse_json_field(row['related_same_month_brand']).items():
-                if poi_name in pois_names_to_ids:
-                    related_same_month_brand[pois_names_to_ids[poi_name]] = tendency
-
-            sum_tendency = sum(related_same_month_brand.values())
-            tendency_probabilities = {poi_id: tendency / sum_tendency for poi_id, tendency in related_same_month_brand.items()}
-=======
             related_same_month_brand = parse_json_field(row['related_same_month_brand'])
             related_same_month_brand_probabilities = {}
             if related_same_month_brand:
@@ -117,7 +94,6 @@ def preprocess_csv(file_path):
                     related_same_month_brand_probabilities = {
                         poi_name: tendency / sum_tendency for poi_name, tendency in related_same_month_brand.items()
                     }
->>>>>>> origin/leave_distribution
 
             # Construct the inner dictionary for poi_dict
             pois_dict[safegraph_place_id] = {
@@ -133,14 +109,3 @@ def preprocess_csv(file_path):
             } 
 
     return pois_dict
-<<<<<<< HEAD
-
-if __name__ == "__main__":
-    pois_dict = preprocess_csv('input/hagerstown.csv')
-    import yaml
-
-    # Write the processed data to YAML file
-    with open('output/parsed_hagerstown.yaml', 'w') as yaml_file:
-        yaml.dump(pois_dict, yaml_file, default_flow_style=False)
-=======
->>>>>>> origin/leave_distribution

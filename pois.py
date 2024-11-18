@@ -33,7 +33,6 @@ class POIs:
     
     def get_dwell_time_cdf(self, poi_id):
         return self.dwell_times[poi_id], self.dwell_time_cdfs[poi_id]
-
     
     def generate_next_poi_distribution(self, current_time, population):
         C = np.array(list(self.get_capacities_by_time(current_time).values()))

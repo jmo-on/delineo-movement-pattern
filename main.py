@@ -1,17 +1,9 @@
-<<<<<<< HEAD
 from datetime import datetime
 
 from preprocess_data import preprocess_csv
 from person import Person
 import random
 from pois import POIs
-=======
-import datetime
-import random
-from preprocess_data import preprocess_csv
-from pois import POIs
-from person import Person
->>>>>>> origin/leave_distribution
 
 def leaving_poi(person: Person, current_time, pois: POIs, current_occupancy):
     """
@@ -61,13 +53,6 @@ def leaving_poi(person: Person, current_time, pois: POIs, current_occupancy):
             print("stayed!")
     return
 
-<<<<<<< HEAD
-def main(file_path, start_time, simulation_duration):
-    # Process CSV Data
-    print("Parsing the CSV file...")
-    poi_dict = preprocess_csv(file_path)
-    print(f"Parsed {len(poi_dict)} POIs.")
-=======
 
 def entering_poi(person, pois, current_time, current_occupancy):
     """
@@ -94,7 +79,6 @@ def main(file_path):
     pois_names_to_ids = {}  # Assuming you have this mapping
     pois = POIs(pois_dict, pois_names_to_ids)
     print(f"Parsed {len(pois_dict)} POIs.")
->>>>>>> origin/leave_distribution
 
     # Create population
     hagerstown_pop = 2500
@@ -104,7 +88,6 @@ def main(file_path):
     # Initialize current occupancy
     current_occupancy = {poi_id: 0 for poi_id in pois_dict.keys()}
 
-<<<<<<< HEAD
     # Create POIs
     pois = POIs(poi_dict)
     print("Created a POIs instance.")
@@ -123,17 +106,6 @@ def main(file_path):
         current_time = start_time + datetime.timedelta(hours=1)
 
     # Output the results
-=======
-    # Main iteration
-    days = 30
-    for day in range(days):
-        for hour in range(24):
-            current_time = datetime.datetime(2021, 4, 1) + datetime.timedelta(days=day, hours=hour)
-            print(current_time.day, current_time.hour)
-            for person_id, person in people.items():
-                leaving_poi(person, current_time, pois, current_occupancy)
-                entering_poi(person, pois, current_time, current_occupancy)
->>>>>>> origin/leave_distribution
 
 
 if __name__ == "__main__":
