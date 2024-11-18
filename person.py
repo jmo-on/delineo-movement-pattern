@@ -11,22 +11,22 @@ class Person:
         if poi in self.visited:
             self.visited[poi] += 1
         else:
-            self.visited[poi] = 0
+            self.visited[poi] = 1
         self.total_visited += 1
         self.is_poi = True
         self.curr_poi = poi
-        self.hour_stayed += 1
+        self.hour_stayed = 1  # Reset hour_stayed when visiting a new POI
 
     def leave(self):
         """Leaves a point of interest."""
         self.is_poi = False
         self.hour_stayed = 0
+        self.curr_poi = ""
+    
+    def stay(self):
+        self.hour_stayed += 1
 
     def __repr__(self) -> str:
         return (f"Person(is_poi={self.is_poi}, curr_poi='{self.curr_poi}', "
-                f"hour_stayed={self.hour_stayed}, totalVisited={self.totalVisited}, "
+                f"hour_stayed={self.hour_stayed}, total_visited={self.total_visited}, "
                 f"visited={self.visited})")
-
-
-
-    
