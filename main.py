@@ -7,6 +7,8 @@ from pois import POIs
 from enter_poi import enter_poi
 from leave_poi import leave_poi
 
+import pandas as pd
+
 def main(file_path, population, start_time, simulation_duration):
     # Process CSV Data
     print("Parsing the CSV file...")
@@ -21,9 +23,20 @@ def main(file_path, population, start_time, simulation_duration):
     people = {person_id: Person() for person_id in range(hagerstown_pop)}
     print(f"Created {hagerstown_pop} Person instances.")
 
+    # Create DataFrame for result showing
+    df = pd.DataFrame(columns=pois.pois)
+
+
+    # Run algorithm
     for hour in range(simulation_duration):
-        print(f"Simulating hour {hour + 1}/{simulation_duration}...")
+        print(f"Simulating hour {hour + 1}/{simulation_duration}...", start_time + timedelta(hours=hour))
+        #leave_poi(people, start_time + timedelta(hours=hour), pois)
         enter_poi(people, pois, start_time + timedelta(hours=hour), hagerstown_pop)
+        df.loc[hour] = pois.occupancies
+
+    
+    output_file = "simulation_results.csv"
+    df.to_csv(output_file, index=True)  
 
 
 if __name__ == "__main__":
