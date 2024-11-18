@@ -23,9 +23,7 @@ def main(file_path, population, start_time, simulation_duration):
 
     for hour in range(simulation_duration):
         print(f"Simulating hour {hour + 1}/{simulation_duration}...")
-        test = pois.generate_next_poi_distribution_with_tendency(start_time + timedelta(hours=hour), hagerstown_pop)
-        print(test)
-        # enter_poi(people, pois, start_time + timedelta(hours=hour), hagerstown_pop)
+        enter_poi(people, pois, start_time + timedelta(hours=hour), hagerstown_pop)
 
 
 if __name__ == "__main__":
