@@ -8,10 +8,18 @@ def parse_json_field(field):
         return json.loads(field)
     except json.JSONDecodeError:
         return {}
+    
+def create_pois_names_to_ids(file_path):
+    pois_names_to_ids = {}
+    with open(file_path, mode='r', encoding='utf-8') as csvfile:
+        reader = csv.DictReader(csvfile)
+        for row in reader:
+            pois_names_to_ids[row['location_name']] = row['safegraph_place_id']
+    return pois_names_to_ids
 
 def preprocess_csv(file_path):
     pois_dict = {}
-    pois_names_to_ids = {poi_dict['location_name']: id for id, poi_dict in pois_dict.items()}
+    pois_names_to_ids = create_pois_names_to_ids(file_path)
     with open(file_path, mode='r', encoding='utf-8') as csvfile:
         reader = csv.DictReader(csvfile)
         for row in reader:
@@ -25,7 +33,13 @@ def preprocess_csv(file_path):
 
             bucketed_dwell_times = parse_json_field(row['bucketed_dwell_times'])
 
-            related_same_month_brand = {pois_names_to_ids[poi_name]: tendency for poi_name, tendency in parse_json_field(row['related_same_month_brand'])}
+            # related_same_month_brand = {pois_names_to_ids[poi_name]: tendency for poi_name, tendency in parse_json_field(row['related_same_month_brand'])}
+
+            related_same_month_brand = {}
+            for poi_name, tendency in parse_json_field(row['related_same_month_brand']).items():
+                if poi_name in pois_names_to_ids:
+                    related_same_month_brand[pois_names_to_ids[poi_name]] = tendency
+
             sum_tendency = sum(related_same_month_brand.values())
             tendency_probabilities = {poi_id: tendency / sum_tendency for poi_id, tendency in related_same_month_brand.items()}
 
@@ -43,9 +57,10 @@ def preprocess_csv(file_path):
 
     return pois_dict
 
-# pois_dict, pois_ids_to_names = preprocess_csv('input/hagerstown.csv')
-# import yaml
+if __name__ == "__main__":
+    pois_dict = preprocess_csv('input/hagerstown.csv')
+    import yaml
 
-# # Write the processed data to YAML file
-# with open('output/parsed_hagerstown.yaml', 'w') as yaml_file:
-#     yaml.dump(pois_dict, yaml_file, default_flow_style=False)
+    # Write the processed data to YAML file
+    with open('output/parsed_hagerstown.yaml', 'w') as yaml_file:
+        yaml.dump(pois_dict, yaml_file, default_flow_style=False)
