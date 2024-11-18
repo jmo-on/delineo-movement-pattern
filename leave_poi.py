@@ -23,7 +23,10 @@ def leave_poi(people, current_time, pois):
         # Adjust leave probability based on occupancy
         expected_capacity = pois.capacities[current_time.day].get(poi_id, 1)
         current_occupancy = pois.occupancies.get(poi_id, 0)
-        occupancy_ratio = current_occupancy / expected_capacity
+        if expected_capacity > 0:
+            occupancy_ratio = current_occupancy / expected_capacity
+        else:
+            occupancy_ratio = 0
 
         # Modify leave probability with occupancy
         if occupancy_ratio > 1:  # Over-occupied POI
@@ -38,7 +41,5 @@ def leave_poi(people, current_time, pois):
         if random.random() < leave_prob:
             person.leave()
             pois.occupancies[poi_id] = max(0, current_occupancy - 1)  # Decrement occupancy
-            print(f"Person {person_id} exited POI {poi_id}")
         else:
             person.stay()
-            print(f"Person {person_id} stayed at POI {poi_id}")

@@ -8,6 +8,7 @@ from enter_poi import enter_poi
 from leave_poi import leave_poi
 
 import pandas as pd
+import matplotlib.pyplot as plt
 
 def main(file_path, population, start_time, simulation_duration):
     # Process CSV Data
@@ -30,14 +31,14 @@ def main(file_path, population, start_time, simulation_duration):
     # Run algorithm
     for hour in range(simulation_duration):
         print(f"Simulating hour {hour + 1}/{simulation_duration}...", start_time + timedelta(hours=hour))
-        #leave_poi(people, start_time + timedelta(hours=hour), pois)
+        leave_poi(people, start_time + timedelta(hours=hour), pois)
         enter_poi(people, pois, start_time + timedelta(hours=hour), hagerstown_pop)
-        print(pois.occupancies)
         df.loc[hour] = pois.occupancies
-
     
     output_file = "simulation_results.csv"
     df.to_csv(output_file, index=True)  
+    df.plot(legend=False)
+    plt.show() 
 
 
 if __name__ == "__main__":
