@@ -32,6 +32,7 @@ def main(file_path, population, start_time, simulation_duration):
         print(f"Simulating hour {hour + 1}/{simulation_duration}...", start_time + timedelta(hours=hour))
         #leave_poi(people, start_time + timedelta(hours=hour), pois)
         enter_poi(people, pois, start_time + timedelta(hours=hour), hagerstown_pop)
+        print(pois.occupancies)
         df.loc[hour] = pois.occupancies
 
     

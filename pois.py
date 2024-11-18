@@ -37,32 +37,36 @@ class POIs:
     def get_dwell_time_cdf(self, poi_id):
         return self.dwell_times[poi_id], self.dwell_time_cdfs[poi_id]
     
-    def generate_next_poi_distribution(self, current_time, population):
+    def capacity_occupancy_diff(self, current_time):
         C = np.array(list(self.get_capacities_by_time(current_time).values()))
         O = np.array(list(self.occupancies.values()))
-        return (C - O)
+        return np.maximum(C - O, 0)
     
-    def generate_next_poi_distribution_with_tendency(self, current_time, population):
+    def capacity_occupancy_diff_with_tendency(self, current_time, population):
         C = np.array(list(self.get_capacities_by_time(current_time).values()))
         O = np.array(list(self.occupancies.values()))
         A = np.array([list(self.get_after_tendencies(poi_id).values()) for poi_id in self.pois])
         # modify if needed
         alpha = 0.1
-        return ((A * alpha) + (C - O)[:, np.newaxis]) / population
+        return ((A * alpha) + np.maximum(C - O, 0)[:, np.newaxis]) / population
     
-    def get_next_poi(self, current_time, population):
-        distribution = self.generate_next_poi_distribution(current_time, population)
+    def generate_distribution(self, current_time, population):
+        distribution = self.capacity_occupancy_diff(current_time)
         move_probability = sum(distribution) / population
         # normalize distribution
-        distribution = distribution / np.sum(distribution) if np.sum(distribution) > 0 else np.zeros_like(distribution)
+        return move_probability, distribution / np.sum(distribution) if np.sum(distribution) > 0 else np.zeros_like(distribution)
+    
+    def generate_distributions_with_tendency(self, current_time, population):
+        distributions = self.capacity_occupancy_diff_with_tendency(current_time, population)
+        move_probabilities = [sum(distribution) / population for distribution in distributions]
+        # normalize distributions
+        return move_probabilities, [distribution / np.sum(distribution) if np.sum(distribution) > 0 else np.zeros_like(distribution) for distribution in distributions]
+
+    def get_next_poi(self, move_probability, distribution):
         if np.random.random() < move_probability:
             return np.random.choice(self.pois, p=distribution)
         else:
             return None
-    
-    def get_next_poi_with_tendency(self, current_time, population, current_poi_id):
-        distributions = self.generate_next_poi_distribution_with_tendency(current_time, population)
-        return self.pois[np.random.choice(self.pois, p=distributions[self.poi_id_to_index[current_poi_id]])]
     
     def leave(self, poi_id):
         self.occupancies[poi_id] -= 1
