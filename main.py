@@ -6,6 +6,7 @@ from person import Person
 from pois import POIs
 from enter_poi import enter_poi
 from leave_poi import leave_poi
+from draw_plot import draw_plot
 
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -27,18 +28,50 @@ def main(file_path, population, start_time, simulation_duration):
     # Create DataFrame for result showing
     df = pd.DataFrame(columns=pois.pois)
 
+    '''
+    for result
+    '''
+    person_1 = list(people.keys())[0]
+    person_1_path = []
 
     # Run algorithm
     for hour in range(simulation_duration):
         print(f"Simulating hour {hour + 1}/{simulation_duration}...", start_time + timedelta(hours=hour))
         leave_poi(people, start_time + timedelta(hours=hour), pois)
         enter_poi(people, pois, start_time + timedelta(hours=hour), hagerstown_pop)
+
+        '''
+        for result
+        '''
+        
+        capacities = pois.get_capacities_by_time(start_time + timedelta(hours=hour))
+        occupancies = pois.occupancies
+
+        # Write capacity vs occupancy data to file
+        with open('output/capacity_occupancy.csv', 'a') as f:
+            f.write(f"\nHour {hour}:\n")
+            for poi_id in pois.pois:
+                poi_name = pois_dict[poi_id]['location_name']
+                cap = capacities[poi_id]
+                occ = occupancies[poi_id]
+                diff = cap - occ
+                f.write(f"{poi_name},{cap:.2f},{occ},{diff:.2f}\n")
+
+        if people[person_1].curr_poi != "":
+            person_1_path.append(pois_dict[people[person_1].curr_poi]['location_name'])
+        else:
+            person_1_path.append("None")
         df.loc[hour] = pois.occupancies
     
-    output_file = "simulation_results.csv"
-    df.to_csv(output_file, index=True)  
-    df.plot(legend=False)
-    plt.show() 
+    # Print the path of person 1
+    print(person_1_path)
+
+    # Save the DataFrame to a CSV file
+    output_file = "output/simulation_results.csv"
+    df.to_csv(output_file, index=True)
+    location_names = [pois_dict[list(pois_dict.keys())[i]]['location_name'] for i in range(len(df.columns))]
+    df.columns = location_names
+    draw_plot(df, location_names)
 
 
 if __name__ == "__main__":
