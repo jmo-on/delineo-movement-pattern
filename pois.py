@@ -1,7 +1,8 @@
 import numpy as np
 
 class POIs:
-    def __init__(self, pois_dict):
+    def __init__(self, pois_dict, alpha=0.1):
+        self.alpha = alpha
         # pois = [poi_id, ...]
         self.pois = list(pois_dict.keys())
         # pois_id_to_index = {poi_id: index}
@@ -46,9 +47,7 @@ class POIs:
         C = np.array(list(self.get_capacities_by_time(current_time).values()))
         O = np.array(list(self.occupancies.values()))
         A = np.array([list(self.get_after_tendencies(poi_id).values()) for poi_id in self.pois])
-        # modify if needed
-        alpha = 0.1
-        return ((A * alpha) + np.maximum(C - O, 0)[:, np.newaxis]) / population
+        return ((A * self.alpha) + np.maximum(C - O, 0)[:, np.newaxis]) / population
     
     def generate_distribution(self, current_time, population):
         distribution = self.capacity_occupancy_diff(current_time)

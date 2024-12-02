@@ -11,14 +11,14 @@ from draw_plot import draw_plot
 import pandas as pd
 import matplotlib.pyplot as plt
 
-def main(file_path, population, start_time, simulation_duration):
+def main(file_path, population, start_time, simulation_duration, alpha=0.1):
     # Process CSV Data
     print("Parsing the CSV file...")
     pois_dict = preprocess_csv(file_path)
 
-    # Create POIs
-    pois = POIs(pois_dict)
-    print(f"Parsed {len(pois_dict)} POIs.")
+    # Create POIs with specified alpha
+    pois = POIs(pois_dict, alpha=alpha)
+    print(f"Parsed {len(pois_dict)} POIs. Using alpha={alpha}")
 
     # Create Persons
     hagerstown_pop = population
@@ -84,6 +84,7 @@ if __name__ == "__main__":
     with open('setting.txt', 'r') as f:
         town_name = f.readline().strip()
         population = int(f.readline().strip())
+        alpha = float(f.readline().strip())
         start_time = f.readline().strip()
         simulation_duration = int(f.readline().strip())
-    main(f'./input/{town_name}.csv', population, datetime.fromisoformat(start_time), simulation_duration)
+    main(f'./input/{town_name}.csv', population, datetime.fromisoformat(start_time), simulation_duration, alpha)
