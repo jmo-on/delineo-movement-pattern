@@ -71,7 +71,12 @@ def main(file_path, population, start_time, simulation_duration):
     df.to_csv(output_file, index=True)
     location_names = [pois_dict[list(pois_dict.keys())[i]]['location_name'] for i in range(len(df.columns))]
     df.columns = location_names
-    draw_plot(df, location_names)
+    
+    # Save df and location names to files
+    df.to_csv('output/occupancy_df.csv', index=True)
+    with open('output/location_names.txt', 'w') as f:
+        for location in location_names:
+            f.write(f"{location}\n")
 
 
 if __name__ == "__main__":
