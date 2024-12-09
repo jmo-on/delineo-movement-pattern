@@ -48,7 +48,7 @@ def main(file_path, population, start_time, simulation_duration, alpha=0.6553679
         occupancies = pois.occupancies
 
         # Write capacity vs occupancy data to file
-        with open('output/capacity_occupancy.csv', 'a') as f:
+        with open('output/capacity_occupancy.csv', 'a', encoding='utf-8') as f:
             f.write(f"\nHour {hour}:\n")
             for poi_id in pois.pois:
                 poi_name = pois_dict[poi_id]['location_name']
@@ -74,7 +74,7 @@ def main(file_path, population, start_time, simulation_duration, alpha=0.6553679
     
     # Save df and location names to files
     df.to_csv('output/occupancy_df.csv', index=True)
-    with open('output/location_names.txt', 'w') as f:
+    with open('output/location_names.txt', 'w', encoding='utf-8') as f:
         for location in location_names:
             f.write(f"{location}\n")
 
