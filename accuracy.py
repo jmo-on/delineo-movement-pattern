@@ -1,58 +1,96 @@
 import csv
 import math
+import numpy as np
+from scipy import stats
 
 def calculate_metrics(file_path):
-    total_capacity = 0
-    total_occupancy = 0
-    total_difference = 0
-    
-    # For error calculations
-    squared_errors = 0
-    absolute_errors = 0
-    n = 0  # number of non-zero capacity locations
+    capacities = []
+    occupancies = []
+    differences = []
+    hourly_data = {}
     
     with open(file_path, 'r') as file:
         reader = csv.reader(file)
+        current_hour = None
+        
         for row in reader:
-            if len(row) >= 3:  # Ensure row has enough columns
+            if len(row) == 0:
+                continue
+                
+            if row[0].startswith('\nHour'):
+                hour_str = row[0].strip().split()[1].rstrip(':')
+                current_hour = int(hour_str)
+                hourly_data[current_hour] = {'capacities': [], 'occupancies': []}
+                continue
+                
+            if len(row) >= 4:  # location_name, capacity, occupancy, difference
                 try:
                     capacity = float(row[1])
-                    difference = float(row[2])
-                    occupancy = float(row[3])
+                    occupancy = float(row[2])
+                    difference = float(row[3])
                     
                     if capacity > 0:  # Only count locations with non-zero capacity
-                        n += 1
-                        total_capacity += capacity
-                        total_occupancy += occupancy
-                        total_difference += difference
+                        capacities.append(capacity)
+                        occupancies.append(occupancy)
+                        differences.append(difference)
                         
-                        # Calculate errors
-                        error = difference
-                        squared_errors += error ** 2
-                        absolute_errors += abs(error)
+                        if current_hour is not None:
+                            hourly_data[current_hour]['capacities'].append(capacity)
+                            hourly_data[current_hour]['occupancies'].append(occupancy)
                         
                 except (ValueError, IndexError):
-                    continue  # Skip rows with invalid data
+                    continue
     
-    # Calculate error metrics
-    mse = squared_errors / n if n > 0 else 0  # Mean Squared Error
-    rmse = math.sqrt(mse)  # Root Mean Squared Error
-    mae = absolute_errors / n if n > 0 else 0  # Mean Absolute Error
+    # Basic error metrics
+    n = len(capacities)
+    if n == 0:
+        return {'error': 'No valid data points found'}
+    
+    mse = sum(d ** 2 for d in differences) / n
+    rmse = math.sqrt(mse)
+    mae = sum(abs(d) for d in differences) / n
+    
+    # Calculate correlation between capacity and occupancy
+    correlation, _ = stats.pearsonr(capacities, occupancies)
+    
+    # Calculate peak timing error
+    peak_error = calculate_peak_timing_error(hourly_data)
     
     # Calculate accuracy (as percentage)
-    average_error_rate = mae / (total_capacity / n) if n > 0 and total_capacity > 0 else 1.0
-    accuracy = max(0.0, min(1.0, 1.0 - average_error_rate)) * 100  # Convert to percentage and clamp between 0-100
+    average_error_rate = mae / (sum(capacities) / n) if sum(capacities) > 0 else 1.0
+    accuracy = max(0.0, min(1.0, 1.0 - average_error_rate)) * 100
     
     return {
-        'total_capacity': total_capacity,
-        'total_occupancy': total_occupancy,
-        'total_difference': total_difference,
+        'total_capacity': sum(capacities),
+        'total_occupancy': sum(occupancies),
+        'total_difference': sum(differences),
         'number_of_locations': n,
-        'mean_squared_error': mse,  # Now returns raw MSE instead of normalized
+        'mean_squared_error': mse,
         'root_mean_squared_error': rmse,
         'mean_absolute_error': mae,
-        'accuracy': accuracy  # New accuracy metric
+        'correlation': correlation,
+        'peak_error': peak_error,
+        'accuracy': accuracy
     }
+
+def calculate_peak_timing_error(hourly_data):
+    """Calculate the average difference in peak timing between capacity and occupancy"""
+    peak_timing_errors = []
+    
+    for hour, data in hourly_data.items():
+        if not data['capacities'] or not data['occupancies']:
+            continue
+            
+        capacity_sum = sum(data['capacities'])
+        occupancy_sum = sum(data['occupancies'])
+        
+        if capacity_sum > 0 and occupancy_sum > 0:
+            peak_timing_errors.append(abs(
+                capacity_sum / max(sum(d['capacities']) for d in hourly_data.values()) -
+                occupancy_sum / max(sum(d['occupancies']) for d in hourly_data.values())
+            ))
+    
+    return sum(peak_timing_errors) / len(peak_timing_errors) if peak_timing_errors else 1.0
 
 # Usage
 metrics = calculate_metrics('output/capacity_occupancy.csv')

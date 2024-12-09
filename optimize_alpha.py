@@ -1,56 +1,59 @@
 import numpy as np
+from scipy.optimize import differential_evolution
 from accuracy import calculate_metrics
-from pois import POIs
-from main import main
 from datetime import datetime
 import os
+from main import main
 
-def optimize_alpha(simulation_function, alpha_range=(0.001, 1.0), tolerance=1e-4, max_iterations=50):
+def objective_function(params, simulation_function):
     """
-    Optimize alpha using binary search to minimize MSE.
+    Multi-objective function that combines different metrics.
     
     Args:
-        simulation_function: Function that runs simulation with given alpha
-        alpha_range: Tuple of (min_alpha, max_alpha)
-        tolerance: Convergence tolerance
-        max_iterations: Maximum number of binary search iterations
+        params: [alpha, occupancy_weight, tendency_decay]
+        simulation_function: Function that runs simulation with given parameters
     """
-    left, right = alpha_range
-    best_alpha = None
-    best_mse = float('inf')
+    alpha, occupancy_weight, tendency_decay = params
     
-    for iteration in range(max_iterations):
-        # Test three points: left third, middle, right third
-        alpha1 = left + (right - left) / 3
-        alpha2 = left + 2 * (right - left) / 3
-        
-        # Run simulations with both alpha values
-        mse1 = simulation_function(alpha1)
-        mse2 = simulation_function(alpha2)
-        
-        # Update best result
-        if mse1 < best_mse:
-            best_mse = mse1
-            best_alpha = alpha1
-        if mse2 < best_mse:
-            best_mse = mse2
-            best_alpha = alpha2
-            
-        # Update search range
-        if mse1 < mse2:
-            right = alpha2
-        else:
-            left = alpha1
-            
-        # Check convergence
-        if abs(right - left) < tolerance:
-            break
-            
-    return best_alpha, best_mse
+    # Run simulation
+    metrics = simulation_function(alpha, occupancy_weight, tendency_decay)
+    
+    # Combine multiple metrics with weights
+    combined_score = (
+        0.4 * metrics['mean_squared_error'] +  # MSE weight
+        0.3 * (1 - metrics['correlation']) +    # Correlation weight (1 - corr because we minimize)
+        0.3 * metrics['peak_error']            # Peak timing error weight
+    )
+    
+    return combined_score
 
-def run_simulation_with_alpha(alpha):
+def optimize_parameters(simulation_function):
     """
-    Run simulation with a specific alpha value and return MSE.
+    Optimize parameters using differential evolution.
+    """
+    # Parameter bounds
+    bounds = [
+        (0.001, 1.0),     # alpha
+        (0.1, 2.0),       # occupancy_weight
+        (0.1, 0.9)        # tendency_decay
+    ]
+    
+    # Run differential evolution
+    result = differential_evolution(
+        objective_function,
+        bounds,
+        args=(simulation_function,),
+        maxiter=20,
+        popsize=10,
+        mutation=(0.5, 1.0),
+        recombination=0.7
+    )
+    
+    return result.x, result.fun
+
+def run_simulation_with_params(alpha, occupancy_weight, tendency_decay):
+    """
+    Run simulation with specific parameters and return metrics.
     """
     # Clear previous output files
     if os.path.exists('output/capacity_occupancy.csv'):
@@ -60,32 +63,28 @@ def run_simulation_with_alpha(alpha):
     with open('setting.txt', 'r') as f:
         town_name = f.readline().strip()
         population = int(f.readline().strip())
-        alpha = float(f.readline().strip())
         start_time = f.readline().strip()
         simulation_duration = int(f.readline().strip())
     
-    # Run simulation with current alpha
+    # Run simulation
     main(
         f'./input/{town_name}.csv',
         population,
         datetime.fromisoformat(start_time),
         simulation_duration,
-        alpha
+        alpha,
+        occupancy_weight,
+        tendency_decay
     )
     
-    # Calculate metrics
-    metrics = calculate_metrics('output/capacity_occupancy.csv')
-    return metrics['mean_squared_error']
+    return calculate_metrics('output/capacity_occupancy.csv')
 
 if __name__ == "__main__":
-    # Find optimal alpha
-    optimal_alpha, best_mse = optimize_alpha(
-        run_simulation_with_alpha,
-        alpha_range=(0.001, 1.0),
-        tolerance=1e-3,
-        max_iterations=10  # Reduced for faster testing
-    )
+    # Find optimal parameters
+    optimal_params, best_score = optimize_parameters(run_simulation_with_params)
     
     print(f"Optimization Results:")
-    print(f"Optimal alpha: {optimal_alpha:.6f}")
-    print(f"Best MSE: {best_mse:.6f}") 
+    print(f"Optimal alpha: {optimal_params[0]:.6f}")
+    print(f"Optimal occupancy_weight: {optimal_params[1]:.6f}")
+    print(f"Optimal tendency_decay: {optimal_params[2]:.6f}")
+    print(f"Best combined score: {best_score:.6f}") 

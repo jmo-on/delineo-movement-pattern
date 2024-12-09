@@ -1,8 +1,10 @@
 import numpy as np
 
 class POIs:
-    def __init__(self, pois_dict, alpha=0.1):
+    def __init__(self, pois_dict, alpha=0.1, occupancy_weight=1.0, tendency_decay=0.5):
         self.alpha = alpha
+        self.occupancy_weight = occupancy_weight
+        self.tendency_decay = tendency_decay
         # pois = [poi_id, ...]
         self.pois = list(pois_dict.keys())
         # pois_id_to_index = {poi_id: index}
@@ -47,7 +49,14 @@ class POIs:
         C = np.array(list(self.get_capacities_by_time(current_time).values()))
         O = np.array(list(self.occupancies.values()))
         A = np.array([list(self.get_after_tendencies(poi_id).values()) for poi_id in self.pois])
-        return ((A * self.alpha) + np.maximum(C - O, 0)[:, np.newaxis]) / population
+        
+        # Apply occupancy weight to capacity-occupancy difference
+        capacity_term = np.maximum(C - O, 0) * self.occupancy_weight
+        
+        # Apply tendency decay based on time spent
+        tendency_term = A * self.alpha * (1 - self.tendency_decay)
+        
+        return (tendency_term + capacity_term[:, np.newaxis]) / population
     
     def generate_distribution(self, current_time, population):
         distribution = self.capacity_occupancy_diff(current_time)
