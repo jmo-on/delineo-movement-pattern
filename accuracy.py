@@ -27,7 +27,16 @@ def calculate_metrics(file_path):
                 try:
                     capacity = float(row[1])
                     occupancy = float(row[2])
-                    difference = float(row[3])
+                    
+                    # New: Calculate difference with ±1 threshold
+                    if occupancy >= capacity - 1 and occupancy <= capacity + 1:
+                        difference = 0  # Consider it exact match if within threshold
+                    else:
+                        # If outside threshold, calculate difference from nearest boundary
+                        if occupancy < capacity - 1:
+                            difference = occupancy - (capacity - 1)
+                        else:
+                            difference = occupancy - (capacity + 1)
                     
                     if capacity > 0:  # Only count locations with non-zero capacity
                         capacities.append(capacity)
