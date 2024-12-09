@@ -11,7 +11,7 @@ from draw_plot import draw_plot
 import pandas as pd
 import matplotlib.pyplot as plt
 
-def main(file_path, population, start_time, simulation_duration, alpha=0.6553679300535293, occupancy_weight=1.2766019353045106, tendency_decay=0.31681229543645645):
+def main(file_path, population, start_time, simulation_duration, alpha, occupancy_weight, tendency_decay):
     # Process CSV Data
     print("Parsing the CSV file...")
     pois_dict = preprocess_csv(file_path)
@@ -88,9 +88,9 @@ if __name__ == "__main__":
         simulation_duration = int(f.readline().strip())
         
         # Default values if not specified in settings
-        alpha = 0.6553679300535293
-        occupancy_weight = 1.2766019353045106
-        tendency_decay = 0.31681229543645645
+        alpha = 0.16557695315916893
+        occupancy_weight = 1.5711109677337263
+        tendency_decay = 0.3460627088857086
         
     main(f'./input/{town_name}.csv', 
          population, 

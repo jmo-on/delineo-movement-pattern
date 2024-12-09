@@ -28,15 +28,16 @@ def calculate_metrics(file_path):
                     capacity = float(row[1])
                     occupancy = float(row[2])
                     
-                    # New: Calculate difference with ±1 threshold
-                    if occupancy >= capacity - 1 and occupancy <= capacity + 1:
-                        difference = 0  # Consider it exact match if within threshold
+                    # Round up and down both values and compare
+                    ceil_capacity = math.ceil(capacity)
+                    ceil_occupancy = math.ceil(occupancy)
+                    floor_capacity = math.floor(capacity)
+                    floor_occupancy = math.floor(occupancy)
+                    
+                    if ceil_occupancy == ceil_capacity or floor_occupancy == floor_capacity:
+                        difference = 0  # Exact match after either rounding method
                     else:
-                        # If outside threshold, calculate difference from nearest boundary
-                        if occupancy < capacity - 1:
-                            difference = occupancy - (capacity - 1)
-                        else:
-                            difference = occupancy - (capacity + 1)
+                        difference = occupancy - capacity  # Use original values for difference
                     
                     if capacity > 0:  # Only count locations with non-zero capacity
                         capacities.append(capacity)
