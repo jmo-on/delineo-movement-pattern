@@ -80,6 +80,9 @@ def main(file_path, population, start_time, simulation_duration, alpha, occupanc
 
 
 if __name__ == "__main__":
+    import time
+    start_time_execution = time.time()
+
     # Run the main function
     with open('setting.txt', 'r') as f:
         town_name = f.readline().strip()
@@ -99,3 +102,6 @@ if __name__ == "__main__":
          alpha,
          occupancy_weight,
          tendency_decay)
+         
+    end_time_execution = time.time()
+    print(f"Total execution time: {end_time_execution - start_time_execution:.2f} seconds")
