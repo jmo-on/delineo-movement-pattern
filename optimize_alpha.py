@@ -6,13 +6,6 @@ import os
 from main import main
 
 def objective_function(params, simulation_function):
-    """
-    Multi-objective function that combines different metrics.
-    
-    Args:
-        params: [alpha, occupancy_weight, tendency_decay]
-        simulation_function: Function that runs simulation with given parameters
-    """
     alpha, occupancy_weight, tendency_decay = params
     
     # Run simulation
@@ -28,9 +21,6 @@ def objective_function(params, simulation_function):
     return combined_score
 
 def optimize_parameters(simulation_function):
-    """
-    Optimize parameters using differential evolution.
-    """
     # Parameter bounds
     bounds = [
         (0.001, 1.0),     # alpha
@@ -52,9 +42,6 @@ def optimize_parameters(simulation_function):
     return result.x, result.fun
 
 def run_simulation_with_params(alpha, occupancy_weight, tendency_decay):
-    """
-    Run simulation with specific parameters and return metrics.
-    """
     # Clear previous output files
     if os.path.exists('output/capacity_occupancy.csv'):
         os.remove('output/capacity_occupancy.csv')
