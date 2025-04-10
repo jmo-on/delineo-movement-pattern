@@ -8,21 +8,6 @@ def optimize_population(file_path, start_population, start_time, simulation_dura
                        alpha = 0.16557695315916893,
                        occupancy_weight=1.5711109677337263,
                        tendency_decay=0.3460627088857086):
-    """
-    Find optimal population size by running simulations and measuring accuracy.
-    
-    Args:
-        file_path: Path to the input CSV file
-        start_population: Initial population to start optimization from
-        start_time: Start time for simulation
-        simulation_duration: Duration of simulation in hours
-        population_range: Tuple of (min_population, max_population)
-        step_size: Step size for population adjustment
-        alpha, occupancy_weight, tendency_decay: Simulation parameters
-    
-    Returns:
-        dict: Contains optimal population and its corresponding metrics
-    """
     best_metrics = None
     best_population = start_population
     min_pop, max_pop = population_range
